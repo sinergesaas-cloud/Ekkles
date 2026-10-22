@@ -1,96 +1,174 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekkles OS | Painel Administrativo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .status-ativa { background: #dcfce7; color: #166534; }
-        .status-bloqueada { background: #fee2e2; color: #991b1b; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ekkles OS | Painel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.st-ativa{background:#dcfce7;color:#166534}
+.st-bloqueada{background:#fee2e2;color:#991b1b}
+.st-vencendo{background:#fef9c3;color:#854d0e}
+.st-cancelada{background:#e2e8f0;color:#334155}
+</style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
-    <div class="max-w-6xl mx-auto p-4 md:p-6">
-        <header class="flex flex-wrap justify-between items-center mb-8 gap-4">
-            <h1 class="text-2xl font-bold text-indigo-700">Ekkles OS</h1>
-            <button onclick="limparDados()" class="text-sm text-slate-500 hover:underline">Limpar exemplos</button>
-        </header>
-        <section id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                <p class="text-sm text-slate-500">Igrejas Ativas</p>
-                <p id="count-ativas" class="text-2xl font-bold">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                <p class="text-sm text-slate-500">Bloqueadas</p>
-                <p id="count-bloqueadas" class="text-2xl font-bold">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                <p class="text-sm text-slate-500">Receita Estimada</p>
-                <p id="revenue" class="text-2xl font-bold">R$ 0,00</p>
-            </div>
-        </section>
-        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-100 border-b">
-                        <tr>
-                            <th class="p-3">Igreja</th>
-                            <th class="p-3">Plano</th>
-                            <th class="p-3">Vencimento</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3 text-right">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="church-list"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <script>
-        const INITIAL_DATA = [
-            { id: 1, nome: "Primeira Batista", plano: "Premium", vencimento: "2026-10-25", status: "ativa" },
-            { id: 2, nome: "Comunidade da Fé", plano: "Pro", vencimento: "2026-10-20", status: "bloqueada" },
-            { id: 3, nome: "Igreja do Avivamento", plano: "Premium", vencimento: "2026-11-05", status: "ativa" },
-            { id: 4, nome: "Missão Global", plano: "Pro", vencimento: "2026-10-22", status: "ativa" },
-            { id: 5, nome: "Templo da Graça", plano: "Basic", vencimento: "2026-09-15", status: "bloqueada" }
-        ];
-        function render() {
-            const data = JSON.parse(localStorage.getItem('ekkles_data')) || INITIAL_DATA;
-            const tbody = document.getElementById('church-list');
-            tbody.innerHTML = '';
-            
-            let ativas = 0, bloqueadas = 0, receita = 0;
-            data.forEach(item => {
-                if(item.status === 'ativa') { ativas++; receita += 89; } else { bloqueadas++; }
-                
-                tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-3 font-medium">${item.nome}</td>
-                        <td class="p-3">${item.plano}</td>
-                        <td class="p-3">${item.vencimento}</td>
-                        <td class="p-3"><span class="px-2 py-1 rounded text-xs uppercase status-${item.status}">${item.status}</span></td>
-                        <td class="p-3 text-right">
-                            <button onclick="toggleStatus(${item.id})" class="text-indigo-600 hover:underline">Alternar</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            document.getElementById('count-ativas').innerText = ativas;
-            document.getElementById('count-bloqueadas').innerText = bloqueadas;
-            document.getElementById('revenue').innerText = `R$ ${receita},00`;
-        }
-        function toggleStatus(id) {
-            let data = JSON.parse(localStorage.getItem('ekkles_data')) || INITIAL_DATA;
-            data = data.map(i => i.id === id ? {...i, status: i.status === 'ativa' ? 'bloqueada' : 'ativa'} : i);
-            localStorage.setItem('ekkles_data', JSON.stringify(data));
-            render();
-        }
-        function limparDados() {
-            localStorage.removeItem('ekkles_data');
-            render();
-        }
-        render();
-    </script>
+
+<div id="login" class="min-h-screen flex items-center justify-center p-4">
+  <form id="form-login" class="bg-white p-6 rounded-lg shadow w-full max-w-sm space-y-3">
+    <h1 class="text-2xl font-bold text-indigo-700">Ekkles OS</h1>
+    <input id="l-email" type="email" required placeholder="E-mail" class="w-full border rounded p-2">
+    <input id="l-senha" type="password" required placeholder="Senha" class="w-full border rounded p-2">
+    <button class="w-full bg-indigo-600 text-white rounded p-2 font-medium">Entrar</button>
+    <p id="l-erro" class="text-sm text-red-600"></p>
+  </form>
+</div>
+
+<div id="app" class="hidden max-w-6xl mx-auto p-4 md:p-6">
+  <header class="flex flex-wrap justify-between items-center gap-3 mb-6">
+    <h1 class="text-2xl font-bold text-indigo-700">Ekkles OS</h1>
+    <button id="btn-sair" class="text-sm text-slate-500 hover:underline">Sair</button>
+  </header>
+
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Igrejas ativas</p><p id="c-ativas" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Bloqueadas</p><p id="c-bloq" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Receita mensal estimada</p><p id="c-receita" class="text-2xl font-bold">R$ 0,00</p></div>
+  </section>
+
+  <form id="form-igreja" class="bg-white p-4 rounded-lg shadow-sm border mb-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+    <input id="f-nome" required placeholder="Nome da igreja" class="border rounded p-2 md:col-span-2">
+    <input id="f-resp" placeholder="Responsável" class="border rounded p-2">
+    <input id="f-email" type="email" placeholder="E-mail" class="border rounded p-2">
+    <select id="f-plano" required class="border rounded p-2"></select>
+    <input id="f-venc" type="date" required class="border rounded p-2">
+    <button class="bg-indigo-600 text-white rounded p-2 font-medium md:col-span-5">Cadastrar igreja</button>
+  </form>
+
+  <div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
+    <table class="w-full text-left text-sm min-w-[640px]">
+      <thead class="bg-slate-100 border-b">
+        <tr><th class="p-3">Igreja</th><th class="p-3">Plano</th><th class="p-3">Vencimento</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th></tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+  <p id="msg" class="text-sm text-red-600 mt-3"></p>
+</div>
+
+<script>
+const SUPABASE_URL = 'COLE_A_PROJECT_URL';
+const SUPABASE_KEY = 'COLE_A_ANON_PUBLIC_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+const brl = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function mostrarErro(texto) { $('msg').textContent = texto || ''; }
+
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('l-erro').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('l-email').value, password: $('l-senha').value });
+  if (error) { $('l-erro').textContent = 'E-mail ou senha incorretos.'; return; }
+  mostrarApp();
+});
+
+$('btn-sair').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.reload();
+});
+
+async function mostrarApp() {
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  await carregarPlanos();
+  await carregar();
+}
+
+async function carregarPlanos() {
+  const { data, error } = await sb.from('plans').select('*').order('preco_mensal');
+  if (error) { mostrarErro('Erro ao carregar planos: ' + error.message); return; }
+  $('f-plano').innerHTML = data.map(p => `<option value="${esc(p.id)}">${esc(p.nome)} (${brl(p.preco_mensal)}/mês)</option>`).join('');
+}
+
+async function carregar() {
+  const { data, error } = await sb.from('subscriptions')
+    .select('id, status, vencimento, church_id, plan_id, churches(nome), plans(nome, preco_mensal)')
+    .order('vencimento');
+  if (error) { mostrarErro('Erro ao carregar: ' + error.message); return; }
+  mostrarErro('');
+  render(data);
+}
+
+function render(lista) {
+  let ativas = 0, bloq = 0, receita = 0;
+  lista.forEach(s => {
+    if (s.status === 'ativa') { ativas++; receita += Number(s.plans?.preco_mensal || 0); }
+    if (s.status === 'bloqueada') bloq++;
+  });
+  $('c-ativas').textContent = ativas;
+  $('c-bloq').textContent = bloq;
+  $('c-receita').textContent = brl(receita);
+
+  $('lista').innerHTML = lista.map(s => `
+    <tr class="border-b">
+      <td class="p-3 font-medium">${esc(s.churches?.nome)}</td>
+      <td class="p-3">${esc(s.plans?.nome)}</td>
+      <td class="p-3">${esc(s.vencimento)}</td>
+      <td class="p-3"><span class="px-2 py-1 rounded text-xs uppercase st-${esc(s.status)}">${esc(s.status)}</span></td>
+      <td class="p-3 text-right whitespace-nowrap space-x-3">
+        <button onclick="alternar('${s.id}','${s.status}')" class="text-indigo-600 hover:underline">Alternar</button>
+        <button onclick="renovar('${s.id}','${s.plan_id}','${s.vencimento}')" class="text-green-700 hover:underline">Renovar 30 dias</button>
+        <button onclick="excluir('${s.church_id}')" class="text-red-600 hover:underline">Excluir</button>
+      </td>
+    </tr>`).join('');
+}
+
+$('form-igreja').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { data: igreja, error: e1 } = await sb.from('churches')
+    .insert({ nome: $('f-nome').value, responsavel: $('f-resp').value || null, email: $('f-email').value || null })
+    .select().single();
+  if (e1) { mostrarErro('Erro ao cadastrar igreja: ' + e1.message); return; }
+  const { error: e2 } = await sb.from('subscriptions')
+    .insert({ church_id: igreja.id, plan_id: $('f-plano').value, status: 'ativa', vencimento: $('f-venc').value });
+  if (e2) { mostrarErro('Erro ao criar assinatura: ' + e2.message); return; }
+  e.target.reset();
+  await carregar();
+});
+
+async function alternar(id, statusAtual) {
+  const novo = statusAtual === 'ativa' ? 'bloqueada' : 'ativa';
+  const { error } = await sb.from('subscriptions').update({ status: novo }).eq('id', id);
+  if (error) { mostrarErro('Erro ao alterar: ' + error.message); return; }
+  await carregar();
+}
+
+async function renovar(id, planId, vencimento) {
+  const d = new Date(vencimento + 'T00:00:00');
+  d.setDate(d.getDate() + 30);
+  const novoVenc = d.toISOString().slice(0, 10);
+  const { data: plano } = await sb.from('plans').select('preco_mensal').eq('id', planId).single();
+  const { error } = await sb.from('subscriptions').update({ status: 'ativa', vencimento: novoVenc }).eq('id', id);
+  if (error) { mostrarErro('Erro ao renovar: ' + error.message); return; }
+  await sb.from('payments').insert({ subscription_id: id, valor: plano?.preco_mensal || 0, metodo: 'manual' });
+  await carregar();
+}
+
+async function excluir(churchId) {
+  if (!confirm('Excluir esta igreja e todas as suas assinaturas?')) return;
+  const { error } = await sb.from('churches').delete().eq('id', churchId);
+  if (error) { mostrarErro('Erro ao excluir: ' + error.message); return; }
+  await carregar();
+}
+
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) mostrarApp();
+})();
+</script>
 </body>
 </html>
