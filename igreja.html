@@ -74,7 +74,7 @@
       <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[640px]">
           <thead class="bg-slate-100 border-b text-slate-600">
-            <tr><th class="p-3">Nome</th><th class="p-3">WhatsApp</th><th class="p-3">Tipo</th><th class="p-3">Origem</th><th class="p-3 text-right">Ações</th></tr>
+            <tr><th class="p-3">Nome</th><th class="p-3">WhatsApp</th><th class="p-3">Tipo</th><th class="p-3">Origem</th><th class="p-3 text-right">Ações Seguras</th></tr>
           </thead>
           <tbody id="lista-membros"></tbody>
         </table>
@@ -83,46 +83,26 @@
 
     <!-- SEÇÃO: ASSISTENTE VIRTUAL & WHATSAPP -->
     <section id="secao-assistente" class="hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Configurações -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border space-y-4">
-          <div>
-            <h2 class="font-bold text-base text-indigo-700">Configurações da Assistente Virtual (IA)</h2>
-            <p class="text-xs text-slate-500">Defina o comportamento e a personalidade da assistente da igreja.</p>
-          </div>
-          <form id="form-assistente" class="space-y-4">
-            <div>
-              <label class="block text-xs font-medium text-slate-700 mb-1">Nome da Assistente</label>
-              <input id="ast-nome" required placeholder="Ex: Débora, Sofia..." class="w-full border rounded-lg p-2.5 text-sm outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-700 mb-1">Número do WhatsApp Principal</label>
-              <input id="ast-whats" placeholder="Ex: 5511999999999" class="w-full border rounded-lg p-2.5 text-sm outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-700 mb-1">Personalidade / Instruções</label>
-              <textarea id="ast-pers" rows="3" placeholder="Ex: Responda de forma acolhedora, empática e cristã." class="w-full border rounded-lg p-2.5 text-sm outline-none resize-none"></textarea>
-            </div>
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-2.5 text-sm transition">Salvar Configurações</button>
-          </form>
+      <div class="bg-white p-6 rounded-xl shadow-sm border max-w-2xl space-y-4">
+        <div>
+          <h2 class="font-bold text-base text-indigo-700">Configurações da Assistente IA & Boas-Vindas</h2>
+          <p class="text-xs text-slate-500">Defina o nome da assistente e o tom das mensagens enviadas aos visitantes com segurança.</p>
         </div>
-
-        <!-- Conexão do WhatsApp (QR Code) -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border flex flex-col items-center justify-center text-center space-y-4">
-          <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">📱</div>
+        <form id="form-assistente" class="space-y-4">
           <div>
-            <h3 class="font-bold text-base text-slate-800">Conexão com o WhatsApp</h3>
-            <p id="status-conexao-txt" class="text-xs text-slate-500 mt-1">Status: <span class="text-amber-600 font-semibold">Desconectado</span></p>
+            <label class="block text-xs font-medium text-slate-700 mb-1">Nome da Assistente</label>
+            <input id="ast-nome" required placeholder="Ex: Débora, Sofia..." class="w-full border rounded-lg p-2.5 text-sm outline-none">
           </div>
-
-          <div id="qr-code-box" class="w-48 h-48 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 text-xs text-slate-400 p-2">
-            Clique no botão abaixo para gerar o QR Code de conexão.
+          <div>
+            <label class="block text-xs font-medium text-slate-700 mb-1">Número do WhatsApp Principal</label>
+            <input id="ast-whats" placeholder="Ex: 5511999999999" class="w-full border rounded-lg p-2.5 text-sm outline-none">
           </div>
-
-          <button onclick="window.conectarWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg px-5 py-2.5 text-sm transition shadow-sm">
-            ⚡ Conectar WhatsApp (Gerar QR Code)
-          </button>
-        </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-700 mb-1">Personalidade / Instruções de Acolhimento</label>
+            <textarea id="ast-pers" rows="3" class="w-full border rounded-lg p-2.5 text-sm outline-none resize-none"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-2.5 text-sm transition">Salvar Configurações</button>
+        </form>
       </div>
     </section>
 
@@ -228,11 +208,7 @@ async function init() {
 
     $('ast-nome').value = igrejaDados.assistente_nome || 'Débora';
     $('ast-whats').value = igrejaDados.whatsapp_numero || '';
-    $('ast-pers').value = igrejaDados.assistente_personalidade || '';
-
-    if (igrejaDados.whatsapp_conectado) {
-      $('status-conexao-txt').innerHTML = 'Status: <span class="text-emerald-600 font-semibold">Conectado ✅</span>';
-    }
+    $('ast-pers').value = igrejaDados.assistente_personalidade || 'Shalom, {nome}! Aqui é a {assistente} da {igreja}. Que alegria ter você conosco em nosso culto! Deus abençoe sua vida. 🙏';
   }
 
   carregarMembros();
@@ -262,20 +238,6 @@ $('form-assistente').addEventListener('submit', async e => {
   alert('Configurações salvas com sucesso!');
 });
 
-// SIMULAÇÃO DA CONEXÃO VIA QR CODE (PRONTO PARA API DE WHATSAPP)
-window.conectarWhatsApp = async function() {
-  $('qr-code-box').innerHTML = '<div class="animate-spin text-xl">⏳</div><p class="mt-2 text-slate-500">Gerando QR Code...</p>';
-  
-  setTimeout(async () => {
-    // Simulando QR Code gerado com sucesso
-    $('qr-code-box').innerHTML = '<div class="bg-slate-900 text-white p-4 rounded-lg text-xs font-mono">📱 [QR CODE SIMULADO]<br>Abra o WhatsApp e escaneie.</div>';
-    $('status-conexao-txt').innerHTML = 'Status: <span class="text-emerald-600 font-semibold">Conectado ✅</span>';
-    
-    await sb.from('churches').update({ whatsapp_conectado: true }).eq('id', churchId);
-    alert('WhatsApp conectado com sucesso!');
-  }, 2000);
-};
-
 async function carregarMembros() {
   const { data } = await sb.from('members').select('*').eq('church_id', churchId).order('criado_em', { ascending: false });
   listaMembrosCache = data || [];
@@ -290,18 +252,36 @@ function renderMembros(lista) {
   $('c-visitantes').textContent = visitantes;
   $('c-membros').textContent = membros;
 
-  $('lista-membros').innerHTML = lista.map(m => `
-    <tr class="border-b hover:bg-slate-50/50">
-      <td class="p-3 font-medium">${esc(m.nome)}</td>
-      <td class="p-3 text-slate-500">${esc(m.telefone || '-')}</td>
-      <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-indigo-50 text-indigo-700">${esc(m.tipo)}</span></td>
-      <td class="p-3 text-slate-400 text-xs">${esc(m.observacoes || 'Cadastro direto')}</td>
-      <td class="p-3 text-right space-x-2">
-        ${m.tipo === 'visitante' ? `<button onclick="window.promoverMembro('${m.id}')" class="text-emerald-600 hover:underline text-xs font-semibold">✨ Promover</button>` : ''}
-        <button onclick="window.excluirMembro('${m.id}')" class="text-red-600 hover:underline text-xs">Excluir</button>
-      </td>
-    </tr>
-  `).join('');
+  const nomeIgreja = igrejaDados ? igrejaDados.nome : 'nossa igreja';
+  const nomeAssistente = igrejaDados && igrejaDados.assistente_nome ? igrejaDados.assistente_nome : 'Débora';
+  const modeloPers = igrejaDados && igrejaDados.assistente_personalidade ? igrejaDados.assistente_personalidade : 'Shalom, {nome}! Aqui é a {assistente} da {igreja}. Que alegria ter você conosco!';
+
+  $('lista-membros').innerHTML = lista.map(m => {
+    let foneLimpo = m.telefone ? m.telefone.replace(/\D/g, '') : '';
+    if (foneLimpo && !foneLimpo.startsWith('55')) foneLimpo = '55' + foneLimpo;
+
+    // Substituir tags dinâmicas no texto da mensagem
+    let textoMsg = modeloPers
+      .replace(/{nome}/g, m.nome)
+      .replace(/{assistente}/g, nomeAssistente)
+      .replace(/{igreja}/g, nomeIgreja);
+
+    let linkZap = foneLimpo ? `https://wa.me/${foneLimpo}?text=` + encodeURIComponent(textoMsg) : '#';
+
+    return `
+      <tr class="border-b hover:bg-slate-50/50">
+        <td class="p-3 font-medium">${esc(m.nome)}</td>
+        <td class="p-3 text-slate-500">${esc(m.telefone || '-')}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-indigo-50 text-indigo-700">${esc(m.tipo)}</span></td>
+        <td class="p-3 text-slate-400 text-xs">${esc(m.observacoes || 'Cadastro direto')}</td>
+        <td class="p-3 text-right space-x-2 whitespace-nowrap">
+          ${foneLimpo ? `<a href="${linkZap}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-medium inline-block transition shadow-sm">💬 WhatsApp</a>` : ''}
+          ${m.tipo === 'visitante' ? `<button onclick="window.promoverMembro('${m.id}')" class="text-indigo-600 hover:underline text-xs font-semibold">✨ Promover</button>` : ''}
+          <button onclick="window.excluirMembro('${m.id}')" class="text-red-600 hover:underline text-xs">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 window.filtrarMembros = function() {
