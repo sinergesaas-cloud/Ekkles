@@ -12,8 +12,8 @@
 <div class="w-full max-w-md bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
   <div class="text-center mb-6">
     <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Seja Bem-Vindo!</span>
-    <h1 class="text-2xl font-bold mt-3 text-white">Que alegria ter você aqui</h1>
-    <p class="text-sm text-slate-400 mt-1">Deixe seus dados para sabermos que você nos visitou e receber nossa programação.</p>
+    <h1 id="txt-titulo" class="text-2xl font-bold mt-3 text-white">Que alegria ter você aqui</h1>
+    <p class="text-sm text-slate-400 mt-1">Deixe seus dados para registrar sua presença e falar com nossa assistente.</p>
   </div>
 
   <form id="form-visitante" class="space-y-4">
@@ -28,7 +28,7 @@
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Como nos conheceu? (Opcional)</label>
+      <label class="block text-xs font-medium text-slate-700 mb-1">Como nos conheceu? (Opcional)</label>
       <select id="v-como" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none">
         <option value="">Selecione uma opção...</option>
         <option value="amigo">Convidado por amigo/familiar</option>
@@ -43,53 +43,70 @@
     </button>
   </form>
 
-  <div id="sucesso" class="hidden text-center py-8 space-y-3">
+  <div id="sucesso" class="hidden text-center py-6 space-y-4">
     <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
-    <h2 class="text-xl font-bold text-white">Prontinho!</h2>
-    <p class="text-sm text-slate-300">Seus dados foram salvos com sucesso. É uma honra ter você conosco hoje!</p>
+    <h2 class="text-xl font-bold text-white">Presença Registrada!</h2>
+    <p class="text-sm text-slate-300">Estamos te redirecionando para o WhatsApp da igreja para iniciar o atendimento com nossa assistente...</p>
+    
+    <a id="link-whats-direto" href="#" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm text-center">
+      💬 Abrir WhatsApp Agora
+    </a>
   </div>
 
   <p id="msg-erro" class="text-xs text-red-400 mt-4 text-center font-medium"></p>
 </div>
 
 <script>
-// Mesmas credenciais do seu Supabase
 const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = id => document.getElementById(id);
-
-// Pegar o ID da igreja via parâmetro na URL (Ex: visitante.html?igreja=UUID_DA_IGREJA)
 const urlParams = new URLSearchParams(window.location.search);
 const churchId = urlParams.get('igreja');
+
+let dadosIgreja = null;
+
+// Ao carregar a página, busca o nome da igreja e o número do WhatsApp configurado no painel
+async function initVisitante() {
+  if (!churchId) {
+    $('msg-erro').textContent = 'Link de acesso inválido. Falha na identificação da igreja.';
+    return;
+  }
+
+  const { data } = await sb.from('churches').select('*').eq('id', churchId).single();
+  if (data) {
+    dadosIgreja = data;
+    $('txt-titulo').textContent = `Seja bem-vindo à ${data.nome}`;
+  }
+}
+
+initVisitante();
 
 $('form-visitante').addEventListener('submit', async e => {
   e.preventDefault();
   $('msg-erro').textContent = '';
   
   if (!churchId) {
-    $('msg-erro').textContent = 'Link de acesso inválido. Falha na identificação da igreja.';
+    $('msg-erro').textContent = 'Link de acesso inválido.';
     return;
   }
 
   const btn = $('btn-enviar');
   btn.disabled = true;
-  btn.textContent = 'Salvando...';
+  btn.textContent = 'Salvando e conectando...';
 
-  const nome = $('v-nome').value;
-  const telefone = $('v-tel').value;
+  const nome = $('v-nome').value.trim();
+  const telefone = $('v-tel').value.trim();
   const origem = $('v-como').value;
 
-  // Inserir na tabela de pessoas/visitantes daquela igreja
-  // Certifique-se de que a tabela se chama 'members' ou 'visitors' no seu Supabase
+  // 1. Salvar no Supabase
   const { error } = await sb.from('members').insert({
     church_id: churchId,
     nome: nome,
     telefone: telefone,
     tipo: 'visitante',
-    status: 'ativo',
-    observacoes: origem ? `Conheceu por: ${origem}` : null
+    observacoes: origem ? `Conheceu por: ${origem}` : 'Check-in via QR Code'
   });
 
   if (error) {
@@ -99,9 +116,26 @@ $('form-visitante').addEventListener('submit', async e => {
     return;
   }
 
-  // Esconde o formulário e mostra a tela de sucesso
+  // 2. Preparar link seguro do WhatsApp (Inbound)
+  // Se a igreja cadastrou o número dela, usamos. Senão, usamos um número padrão de exemplo ou alerta.
+  let foneIgreja = dadosIgreja && dadosIgreja.whatsapp_numero ? dadosIgreja.whatsapp_numero.replace(/\D/g, '') : '5511999999999';
+  const nomeAssistente = dadosIgreja && dadosIgreja.assistente_nome ? dadosIgreja.assistente_nome : 'Débora';
+  const nomeIgreja = dadosIgreja ? dadosIgreja.nome : 'nossa igreja';
+
+  const textoMensagem = `Olá, ${nomeAssistente}! Me chamo ${nome}. Fui ao culto da ${nomeIgreja} hoje e fiz meu check-in pelo QR Code. Gostaria de saber mais sobre a igreja e as células! 🙏`;
+  const urlWhatsApp = `https://wa.me/${foneIgreja}?text=` + encodeURIComponent(textoMensagem);
+
+  // Configurar o botão de redirecionamento direto
+  $('link-whats-direto').href = urlWhatsApp;
+
+  // 3. Esconde o formulário e exibe a tela de sucesso
   $('form-visitante').classList.add('hidden');
   $('sucesso').classList.remove('hidden');
+
+  // Redireciona automaticamente após 2 segundos para o WhatsApp
+  setTimeout(() => {
+    window.location.href = urlWhatsApp;
+  }, 2000);
 });
 </script>
 </body>
