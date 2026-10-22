@@ -120,7 +120,7 @@ $('form-visitante').addEventListener('submit', async e => {
   const nomeAssistente = dadosIgreja && dadosIgreja.assistente_nome ? dadosIgreja.assistente_nome : 'Débora';
   const nomeIgreja = dadosIgreja ? dadosIgreja.nome : 'nossa igreja';
 
-  const textoMensagem = `Olá, ${nomeAssistente}! Me chamo ${nome}. Fui ao culto da ${nomeIgreja} hoje e fiz meu check-in pelo QR Code. Gostaria de saber mais sobre a igreja e as células! 🙏`;
+  const textoMensagem = `Olá, ${nomeAssistente}! Me chamo ${nome}. Fui ao culto da ${nomeIgreja} hoje e fiz meu check-in pelo QR Code. Gostaria de finalizar meu cadastro! 🙏`;
   const urlWhatsApp = `https://wa.me/${foneIgreja}?text=` + encodeURIComponent(textoMensagem);
 
   $('link-whats-direto').href = urlWhatsApp;
