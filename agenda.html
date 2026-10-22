@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda da Igreja | Programação Oficial</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col items-center p-4 md:p-8">
+
+  <div class="w-full max-w-2xl space-y-6">
+    
+    <!-- CABEÇALHO -->
+    <div class="text-center space-y-2 bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl backdrop-blur-sm">
+      <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Programação Oficial</span>
+      <h1 id="nome-igreja" class="text-2xl font-bold text-white">Carregando Agenda...</h1>
+      <p class="text-xs text-slate-400">Acompanhe nossos cultos, eventos e participe conosco!</p>
+    </div>
+
+    <!-- LISTA DE EVENTOS -->
+    <div id="lista-agenda" class="space-y-3">
+      <!-- Os eventos serão injetados aqui via JavaScript -->
+    </div>
+
+    <div id="vazio" class="hidden text-center py-12 text-slate-500 text-sm">
+      Nenhum evento programado no momento. Volte em breve!
+    </div>
+
+    <p id="msg-erro" class="text-xs text-red-400 text-center font-medium"></p>
+
+    <!-- RODAPÉ -->
+    <footer class="text-center text-xs text-slate-600 pt-6">
+      Powered by <span class="font-semibold text-slate-500">Ekkles OS</span>
+    </footer>
+
+  </div>
+
+<script>
+const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Pegar o ID da igreja via parâmetro na URL (Ex: agenda.html?igreja=UUID)
+const urlParams = new URLSearchParams(window.location.search);
+let churchId = urlParams.get('igreja');
+
+async function carregarAgendaPublica() {
+  if (!churchId) {
+    // Se não veio na URL, pega a primeira igreja para teste inicial
+    const { data: igrejaPadrao } = await sb.from('churches').select('id, nome').limit(1).single();
+    if (igrejaPadrao) {
+      churchId = igrejaPadrao.id;
+      $('nome-igreja').textContent = igrejaPadrao.nome;
+    } else {
+      $('msg-erro').textContent = 'Igreja não identificada.';
+      return;
+    }
+  } else {
+    // Busca o nome da igreja específica
+    const { data: ig } = await sb.from('churches').select('nome').eq('id', churchId).single();
+    if (ig) $('nome-igreja').textContent = ig.nome;
+  }
+
+  // Busca os eventos futuros daquela igreja
+  const { data: eventos, error } = await sb.from('events')
+    .select('*')
+    .eq('church_id', churchId)
+    .order('data_inicio', { ascending: true });
+
+  if (error) {
+    $('msg-erro').textContent = 'Erro ao carregar agenda: ' + error.message;
+    return;
+  }
+
+  if (!eventos || eventos.length === 0) {
+    $('vazio').classList.remove('hidden');
+    return;
+  }
+
+  $('lista-agenda').innerHTML = eventos.map(ev => {
+    const dataObj = new Date(ev.data_inicio);
+    const dia = dataObj.getDate();
+    const mes = dataObj.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase();
+    const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+
+    return `
+      <div class="bg-slate-800 border border-slate-700/80 p-4 rounded-xl flex items-center gap-4 shadow-md hover:border-indigo-500/50 transition">
+        <div class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl p-3 text-center min-w-[70px]">
+          <span class="block text-xs font-bold uppercase tracking-wider">${esc(mes)}</span>
+          <span class="block text-2xl font-black">${esc(dia)}</span>
+        </div>
+        <div class="flex-1">
+          <span class="text-xs text-indigo-400 font-semibold capitalize">${esc(diaSemana)} • ${esc(hora)}h</span>
+          <h2 class="text-base font-bold text-white mt-0.5">${esc(ev.titulo)}</h2>
+          ${ev.descricao ? `<p class="text-xs text-slate-400 mt-1">${esc(ev.descricao)}</p>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+carregarAgendaPublica();
+</script>
+</body>
+</html>
