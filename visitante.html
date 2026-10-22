@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bem-vindo à Igreja | Ekkles OS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-md bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
+  <div class="text-center mb-6">
+    <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Seja Bem-Vindo!</span>
+    <h1 class="text-2xl font-bold mt-3 text-white">Que alegria ter você aqui</h1>
+    <p class="text-sm text-slate-400 mt-1">Deixe seus dados para sabermos que você nos visitou e receber nossa programação.</p>
+  </div>
+
+  <form id="form-visitante" class="space-y-4">
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Seu Nome Completo</label>
+      <input id="v-nome" type="text" required placeholder="Ex: João da Silva" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none">
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">WhatsApp (com DDD)</label>
+      <input id="v-tel" type="tel" required placeholder="Ex: 11999999999" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none">
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Como nos conheceu? (Opcional)</label>
+      <select id="v-como" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none">
+        <option value="">Selecione uma opção...</option>
+        <option value="amigo">Convidado por amigo/familiar</option>
+        <option value="redes_sociais">Redes Sociais (Instagram/YouTube)</option>
+        <option value="passei_frente">Moro perto / Passei em frente</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+
+    <button type="submit" id="btn-enviar" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">
+      Cadastrar minha presença
+    </button>
+  </form>
+
+  <div id="sucesso" class="hidden text-center py-8 space-y-3">
+    <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+    <h2 class="text-xl font-bold text-white">Prontinho!</h2>
+    <p class="text-sm text-slate-300">Seus dados foram salvos com sucesso. É uma honra ter você conosco hoje!</p>
+  </div>
+
+  <p id="msg-erro" class="text-xs text-red-400 mt-4 text-center font-medium"></p>
+</div>
+
+<script>
+// Mesmas credenciais do seu Supabase
+const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+
+// Pegar o ID da igreja via parâmetro na URL (Ex: visitante.html?igreja=UUID_DA_IGREJA)
+const urlParams = new URLSearchParams(window.location.search);
+const churchId = urlParams.get('igreja');
+
+$('form-visitante').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('msg-erro').textContent = '';
+  
+  if (!churchId) {
+    $('msg-erro').textContent = 'Link de acesso inválido. Falha na identificação da igreja.';
+    return;
+  }
+
+  const btn = $('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const nome = $('v-nome').value;
+  const telefone = $('v-tel').value;
+  const origem = $('v-como').value;
+
+  // Inserir na tabela de pessoas/visitantes daquela igreja
+  // Certifique-se de que a tabela se chama 'members' ou 'visitors' no seu Supabase
+  const { error } = await sb.from('members').insert({
+    church_id: churchId,
+    nome: nome,
+    telefone: telefone,
+    tipo: 'visitante',
+    status: 'ativo',
+    observacoes: origem ? `Conheceu por: ${origem}` : null
+  });
+
+  if (error) {
+    $('msg-erro').textContent = 'Erro ao salvar: ' + error.message;
+    btn.disabled = false;
+    btn.textContent = 'Cadastrar minha presença';
+    return;
+  }
+
+  // Esconde o formulário e mostra a tela de sucesso
+  $('form-visitante').classList.add('hidden');
+  $('sucesso').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
