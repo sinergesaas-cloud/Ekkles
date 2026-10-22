@@ -55,7 +55,7 @@
     <input id="f-email" type="email" placeholder="E-mail de contato" class="border rounded p-2 text-sm">
     <select id="f-plano" required class="border rounded p-2 text-sm bg-white"></select>
     <input id="f-venc" type="date" required class="border rounded p-2 text-sm">
-    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded p-2 font-medium text-sm md:col-span-5 transition">Cadastrar e Ativar Igreja</button>
+    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded p-2 font-medium text-sm md:col-span-5 transition">Cadastrar e Gerar Acesso</button>
   </form>
 
   <!-- TABELA DE CLIENTES -->
@@ -74,6 +74,32 @@
     </table>
   </div>
   <p id="msg" class="text-sm text-red-600 mt-3 text-center font-medium"></p>
+</div>
+
+<!-- MODAL DE COMPARTILHAMENTO DE ACESSO -->
+<div id="modal-acesso" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 border">
+    <div class="flex justify-between items-center border-b pb-3">
+      <div>
+        <h3 class="font-bold text-lg text-indigo-700">Acesso Gerado com Sucesso!</h3>
+        <p class="text-xs text-slate-500">Copie a mensagem e envie para o responsável via WhatsApp.</p>
+      </div>
+      <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">&times;</button>
+    </div>
+
+    <div>
+      <textarea id="texto-whatsapp" rows="7" class="w-full bg-slate-50 border rounded-xl p-3 text-xs text-slate-700 font-mono outline-none resize-none" readonly></textarea>
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button onclick="copiarTexto()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-medium text-sm transition shadow-sm">
+        📋 Copiar Mensagem
+      </button>
+      <button onclick="fecharModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2.5 font-medium text-sm transition">
+        Fechar
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -115,7 +141,7 @@ async function carregarPlanos() {
 
 async function carregar() {
   const { data, error } = await sb.from('subscriptions')
-    .select('id, status, vencimento, church_id, plan_id, churches(nome), plans(nome, preco_mensal)')
+    .select('id, status, vencimento, church_id, plan_id, churches(nome, responsavel), plans(nome, preco_mensal)')
     .order('vencimento');
   if (error) { mostrarErro('Erro ao carregar assinaturas: ' + error.message); return; }
   mostrarErro('');
@@ -139,6 +165,7 @@ function render(lista) {
       <td class="p-3 text-slate-600">${esc(s.vencimento)}</td>
       <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase st-${esc(s.status)}">${esc(s.status)}</span></td>
       <td class="p-3 text-right whitespace-nowrap space-x-2">
+        <button onclick="window.gerarMensagemAcesso('${s.church_id}', '${esc(s.churches?.nome)}', '${esc(s.churches?.responsavel || 'Pastor(a)}')')" class="text-emerald-700 hover:text-emerald-900 font-medium">Copiar Acesso</button>
         <button onclick="window.alternar('${s.id}','${s.status}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Alternar</button>
         <button onclick="window.renovar('${s.id}','${s.plan_id}','${s.vencimento}')" class="text-emerald-700 hover:text-emerald-900 font-medium">Renovar +30d</button>
         <button onclick="window.excluir('${s.church_id}')" class="text-red-600 hover:text-red-800 font-medium">Excluir</button>
@@ -148,8 +175,11 @@ function render(lista) {
 
 $('form-igreja').addEventListener('submit', async e => {
   e.preventDefault();
+  const nomeIgreja = $('f-nome').value;
+  const respIgreja = $('f-resp').value || 'Pastor(a)';
+
   const { data: igreja, error: e1 } = await sb.from('churches')
-    .insert({ nome: $('f-nome').value, responsavel: $('f-resp').value || null, email: $('f-email').value || null })
+    .insert({ nome: nomeIgreja, responsavel: respIgreja, email: $('f-email').value || null })
     .select().single();
   if (e1) { mostrarErro('Erro ao cadastrar igreja: ' + e1.message); return; }
   
@@ -159,7 +189,33 @@ $('form-igreja').addEventListener('submit', async e => {
   
   e.target.reset();
   await carregar();
+
+  // Abre automaticamente a mensagem de acesso para a igreja recém cadastrada
+  window.gerarMensagemAcesso(igreja.id, nomeIgreja, respIgreja);
 });
+
+// Função para gerar e exibir o modal com a mensagem pronta
+window.gerarMensagemAcesso = function(churchId, nomeIgreja, responsavel) {
+  const baseUrl = window.location.origin;
+  const linkPainel = `${baseUrl}/igreja.html?igreja=${churchId}`;
+  const linkQrCode = `${baseUrl}/visitante.html?igreja=${churchId}`;
+
+  const mensagem = `Shalom, ${responsavel}! ✝️\n\nSeu acesso ao sistema *Ekkles OS* da igreja *${nomeIgreja}* já está liberado e ativo!\n\n💻 *Painel Administrativo da Igreja:*\n${linkPainel}\n\n📱 *Link do QR Code para Visitantes (Culto):*\n${linkQrCode}\n\nQualquer dúvida ou suporte necessário, estamos à disposição. Deus abençoe! 🙏`;
+
+  $('texto-whatsapp').value = mensagem;
+  $('modal-acesso').classList.remove('hidden');
+};
+
+window.fecharModal = function() {
+  $('modal-acesso').classList.add('hidden');
+};
+
+window.copiarTexto = function() {
+  const textarea = $('texto-whatsapp');
+  textarea.select();
+  document.execCommand('copy');
+  alert('Mensagem copiada para a área de transferência! Cole no WhatsApp do pastor.');
+};
 
 // Funções expostas globalmente para os botões da tabela
 window.alternar = async function(id, statusAtual) {
