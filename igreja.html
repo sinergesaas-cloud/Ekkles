@@ -6,14 +6,31 @@
 <title>Ekkles OS | Gestão da Igreja</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="estilo-tema">
+  /* Estilos dinâmicos injetados por tema */
+</style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
+<body id="corpo-site" class="bg-slate-50 text-slate-900 font-sans min-h-screen">
 
   <!-- HEADER -->
-  <header class="bg-white border-b sticky top-0 z-50 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
-    <div>
-      <h1 class="text-xl font-bold text-indigo-700">Ekkles OS <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full">Gestão Pastoral</span></h1>
-      <p id="txt-igreja-nome" class="text-xs text-slate-500">Carregando dados da igreja...</p>
+  <header id="header-bg" class="bg-white border-b sticky top-0 z-50 px-4 md:px-8 py-4 flex flex-wrap justify-between items-center gap-4 shadow-sm transition">
+    <div class="flex items-center gap-3">
+      <div id="logo-container" class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold overflow-hidden shadow-inner">
+        ⛪
+      </div>
+      <div>
+        <h1 id="txt-igreja-nome" class="text-lg font-bold text-indigo-700">Carregando...</h1>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500">Tema do Painel:</span>
+          <select id="seletor-tema" onchange="mudarTema(this.value)" class="text-xs bg-slate-100 border rounded px-2 py-0.5 outline-none font-medium cursor-pointer">
+            <option value="indigo">Indigo Moderno</option>
+            <option value="emerald">Esmeralda Viva</option>
+            <option value="amber">Dourado / Âmbar</option>
+            <option value="rose">Rosa / Vinho</option>
+            <option value="dark">Dark Elegance</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="flex items-center gap-4">
       <a id="link-publico" href="#" target="_blank" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-lg transition border">Ver Agenda Pública ↗</a>
@@ -23,14 +40,14 @@
 
   <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
 
-    <!-- ABAS DE NAVEGAÇÃO -->
+    <!-- ABAS -->
     <div class="flex border-b gap-6 text-sm font-medium overflow-x-auto">
-      <button onclick="mudarAba('membros')" id="tab-membros" class="pb-3 border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap">Membros & Visitantes</button>
-      <button onclick="mudarAba('celulas')" id="tab-celulas" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">Células</button>
-      <button onclick="mudarAba('agenda')" id="tab-agenda" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">Agenda & Cultos</button>
+      <button onclick="mudarAba('membros')" id="tab-membros" class="tab-btn pb-3 border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap">Membros & Visitantes</button>
+      <button onclick="mudarAba('celulas')" id="tab-celulas" class="tab-btn pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">Células</button>
+      <button onclick="mudarAba('agenda')" id="tab-agenda" class="tab-btn pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">Agenda & Cultos</button>
     </div>
 
-    <!-- CONTEÚDO: MEMBROS E VISITANTES -->
+    <!-- MEMBROS -->
     <section id="secao-membros" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-slate-500">Total Cadastrados</p><p id="c-total" class="text-2xl font-bold text-indigo-600">0</p></div>
@@ -41,67 +58,55 @@
       <div class="bg-white p-5 rounded-xl shadow-sm border">
         <h2 class="font-bold text-sm text-slate-800 mb-4">Cadastrar Novo Membro / Obreiro</h2>
         <form id="form-membro" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <input id="m-nome" required placeholder="Nome completo" class="border rounded-lg p-2.5 text-sm">
-          <input id="m-tel" placeholder="WhatsApp (com DDD)" class="border rounded-lg p-2.5 text-sm">
-          <select id="m-tipo" class="border rounded-lg p-2.5 text-sm bg-white">
+          <input id="m-nome" required placeholder="Nome completo" class="border rounded-lg p-2.5 text-sm outline-none focus:ring-2">
+          <input id="m-tel" placeholder="WhatsApp (com DDD)" class="border rounded-lg p-2.5 text-sm outline-none focus:ring-2">
+          <select id="m-tipo" class="border rounded-lg p-2.5 text-sm bg-white outline-none focus:ring-2">
             <option value="visitante">Visitante</option>
             <option value="membro">Membro Ativo</option>
-            <option value="lider">Lider de Célula</option>
+            <option value="lider">Líder de Célula</option>
           </select>
-          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Adicionar</button>
+          <button type="submit" id="btn-add-membro" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Adicionar</button>
         </form>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[640px]">
           <thead class="bg-slate-100 border-b text-slate-600">
-            <tr>
-              <th class="p-3">Nome</th>
-              <th class="p-3">WhatsApp</th>
-              <th class="p-3">Tipo</th>
-              <th class="p-3">Observação / Origem</th>
-              <th class="p-3 text-right">Ações</th>
-            </tr>
+            <tr><th class="p-3">Nome</th><th class="p-3">WhatsApp</th><th class="p-3">Tipo</th><th class="p-3">Origem</th><th class="p-3 text-right">Ações</th></tr>
           </thead>
           <tbody id="lista-membros"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- CONTEÚDO: CÉLULAS -->
+    <!-- CÉLULAS -->
     <section id="secao-celulas" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-xl shadow-sm border">
         <h2 class="font-bold text-sm text-slate-800 mb-4">Cadastrar Nova Célula</h2>
         <form id="form-celula" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <input id="c-nome-cel" required placeholder="Nome da Célula (Ex: Célula Alfa)" class="border rounded-lg p-2.5 text-sm md:col-span-2">
-          <input id="c-lider" placeholder="Líder responsável" class="border rounded-lg p-2.5 text-sm">
-          <input id="c-dia" placeholder="Dia (Ex: Quarta-feira)" class="border rounded-lg p-2.5 text-sm">
-          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Criar Célula</button>
+          <input id="c-nome-cel" required placeholder="Nome da Célula" class="border rounded-lg p-2.5 text-sm md:col-span-2 outline-none">
+          <input id="c-lider" placeholder="Líder responsável" class="border rounded-lg p-2.5 text-sm outline-none">
+          <input id="c-dia" placeholder="Dia (Ex: Quarta-feira)" class="border rounded-lg p-2.5 text-sm outline-none">
+          <button type="submit" id="btn-add-celula" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Criar Célula</button>
         </form>
       </div>
-
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="grid-celulas"></div>
     </section>
 
-    <!-- CONTEÚDO: AGENDA -->
+    <!-- AGENDA -->
     <section id="secao-agenda" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-xl shadow-sm border">
         <h2 class="font-bold text-sm text-slate-800 mb-4">Cadastrar Culto ou Evento</h2>
         <form id="form-evento" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <input id="e-titulo" required placeholder="Título (Ex: Culto de Celebração)" class="border rounded-lg p-2.5 text-sm md:col-span-2">
-          <input id="e-data" type="datetime-local" required class="border rounded-lg p-2.5 text-sm">
-          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Salvar Evento</button>
+          <input id="e-titulo" required placeholder="Título do Evento" class="border rounded-lg p-2.5 text-sm md:col-span-2 outline-none">
+          <input id="e-data" type="datetime-local" required class="border rounded-lg p-2.5 text-sm outline-none">
+          <button type="submit" id="btn-add-evento" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg p-2.5 text-sm transition">Salvar Evento</button>
         </form>
       </div>
-
       <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[640px]">
           <thead class="bg-slate-100 border-b text-slate-600">
-            <tr>
-              <th class="p-3">Evento / Culto</th>
-              <th class="p-3">Data e Horário</th>
-              <th class="p-3 text-right">Ações</th>
-            </tr>
+            <tr><th class="p-3">Evento / Culto</th><th class="p-3">Data e Horário</th><th class="p-3 text-right">Ações</th></tr>
           </thead>
           <tbody id="lista-eventos"></tbody>
         </table>
@@ -116,25 +121,45 @@ const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = function(id) { return document.getElementById(id); };
+const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); });
 
-// Pegar o ID da igreja logada na sessão (ou via parâmetro para testes)
 const urlParams = new URLSearchParams(window.location.search);
 let churchId = urlParams.get('igreja');
+let igrejaDados = null;
+
+// DEFINIÇÃO DOS 5 TEMAS
+const temas = {
+  indigo: { nome: 'Indigo Moderno', primaria: '#4f46e5', hover: '#4338ca', bgBadge: '#e0e7ff', txtBadge: '#3730a3', bgBody: '#f8fafc' },
+  emerald: { nome: 'Esmeralda Viva', primaria: '#059669', hover: '#047857', bgBadge: '#d1fae5', txtBadge: '#065f46', bgBody: '#f8fafc' },
+  amber: { nome: 'Dourado / Âmbar', primaria: '#d97706', hover: '#b45309', bgBadge: '#fef3c7', txtBadge: '#92400e', bgBody: '#fffbeb' },
+  rose: { nome: 'Rosa / Vinho', primaria: '#e11d48', hover: '#be123c', bgBadge: '#ffe4e6', txtBadge: '#9f1239', bgBody: '#fff1f2' },
+  dark: { nome: 'Dark Elegance', primaria: '#38bdf8', hover: '#0ea5e9', bgBadge: '#0f172a', txtBadge: '#38bdf8', bgBody: '#0f172a', textBody: '#f8fafc', cardBg: '#1e293b', borderCard: '#334155' }
+};
 
 async function init() {
   if (!churchId) {
-    // Se não passou na URL, busca a primeira igreja cadastrada para facilitar os testes iniciais
-    const { data } = await sb.from('churches').select('id, nome').limit(1).single();
-    if (data) {
-      churchId = data.id;
-      $('txt-igreja-nome').textContent = `Igreja: ${data.nome}`;
-      $('link-publico').href = `visitante.html?igreja=${churchId}`;
-    } else {
-      $('msg-erro').textContent = 'Nenhuma igreja encontrada no sistema.';
-      return;
+    const { data } = await sb.from('churches').select('*').limit(1).single();
+    if (data) { churchId = data.id; igrejaDados = data; }
+    else { $('msg-erro').textContent = 'Nenhuma igreja encontrada.'; return; }
+  } else {
+    const { data } = await sb.from('churches').select('*').eq('id', churchId).single();
+    if (data) igrejaDados = data;
+  }
+
+  if (igrejaDados) {
+    $('txt-igreja-nome').textContent = igrejaDados.nome;
+    $('link-publico').href = 'agenda.html?igreja=' + churchId;
+    
+    // Configurar Logo
+    if (igrejaDados.logo_url) {
+      $('logo-container').innerHTML = '<img src="' + esc(igrejaDados.logo_url) + '" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML=\'⛪\'">';
     }
+
+    // Aplicar Tema Salvo no Banco
+    const temaSalvo = igrejaDados.tema || 'indigo';
+    $('seletor-tema').value = temaSalvo;
+    aplicarTemaVisual(temaSalvo);
   }
 
   carregarMembros();
@@ -142,67 +167,76 @@ async function init() {
   carregarAgenda();
 }
 
-function mudarAba(aba) {
-  ['membros', 'celulas', 'agenda'].forEach(a => {
-    $(`secao-${a}`).classList.add('hidden');
-    $(`tab-${a}`).className = "pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap";
-  });
-  $(`secao-${aba}`).classList.remove('hidden');
-  $(`tab-${aba}`).className = "pb-3 border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap";
+function aplicarTemaVisual(chaveTema) {
+  const t = temas[chaveTema] || temas.indigo;
+  const isDark = chaveTema === 'dark';
+
+  document.body.className = (isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900') + ' font-sans min-h-screen';
+  $('header-bg').className = (isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900') + ' border-b sticky top-0 z-50 px-4 md:px-8 py-4 flex flex-wrap justify-between items-center gap-4 shadow-sm transition';
+
+  // Atualizar cores dinâmicas dos botões e abas
+  const css = `
+    .border-indigo-600 { border-color: ${t.primaria} !important; }
+    .text-indigo-600 { color: ${t.primaria} !important; }
+    .bg-indigo-600 { background-color: ${t.primaria} !important; }
+    .hover\\:bg-indigo-750:hover { background-color: ${t.hover} !important; }
+    #logo-container { background-color: ${t.primaria} !important; }
+  `;
+  $('estilo-tema').innerHTML = css;
 }
 
-// --- GESTÃO DE MEMBROS ---
-async function carregarMembros() {
-  const { data, error } = await sb.from('members').select('*').eq('church_id', churchId).order('criado_em', { ascending: false });
-  if (error) { $('msg-erro').textContent = error.message; return; }
+async function mudarTema(novoTema) {
+  aplicarTemaVisual(novoTema);
+  // Salva no Supabase para persistir em qualquer acesso futuro
+  await sb.from('churches').update({ tema: novoTema }).eq('id', churchId);
+}
 
-  let total = data.length, visitantes = 0, membros = 0;
-  data.forEach(m => {
-    if (m.tipo === 'visitante') visitantes++;
-    else membros++;
+function mudarAba(aba) {
+  ['membros', 'celulas', 'agenda'].forEach(a => {
+    $('secao-' + a).classList.add('hidden');
+    $('tab-' + a).className = "tab-btn pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap";
   });
+  $('secao-' + aba).classList.remove('hidden');
+  $('tab-' + aba).className = "tab-btn pb-3 border-b-2 text-indigo-600 whitespace-nowrap border-indigo-600";
+}
+
+async function carregarMembros() {
+  const { data } = await sb.from('members').select('*').eq('church_id', churchId).order('criado_em', { ascending: false });
+  let total = (data || []).length, visitantes = 0, membros = 0;
+  (data || []).forEach(m => { if (m.tipo === 'visitante') visitantes++; else membros++; });
 
   $('c-total').textContent = total;
   $('c-visitantes').textContent = visitantes;
   $('c-membros').textContent = membros;
 
-  $('lista-membros').innerHTML = data.map(m => `
+  $('lista-membros').innerHTML = (data || []).map(m => `
     <tr class="border-b hover:bg-slate-50/50">
       <td class="p-3 font-medium">${esc(m.nome)}</td>
-      <td class="p-3 text-slate-600">${esc(m.telefone || '-')}</td>
+      <td class="p-3 text-slate-500">${esc(m.telefone || '-')}</td>
       <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-indigo-50 text-indigo-700">${esc(m.tipo)}</span></td>
-      <td class="p-3 text-slate-500 text-xs">${esc(m.observacoes || 'Cadastro direto')}</td>
-      <td class="p-3 text-right">
-        <button onclick="window.excluirMembro('${m.id}')" class="text-red-600 hover:underline text-xs">Excluir</button>
-      </td>
+      <td class="p-3 text-slate-400 text-xs">${esc(m.observacoes || 'Cadastro direto')}</td>
+      <td class="p-3 text-right"><button onclick="window.excluirMembro('${m.id}')" class="text-red-600 hover:underline text-xs">Excluir</button></td>
     </tr>
   `).join('');
 }
 
 $('form-membro').addEventListener('submit', async e => {
   e.preventDefault();
-  const { error } = await sb.from('members').insert({
-    church_id: churchId,
-    nome: $('m-nome').value,
-    telefone: $('m-tel').value,
-    tipo: $('m-tipo').value
-  });
-  if (error) { $('msg-erro').textContent = error.message; return; }
+  await sb.from('members').insert({ church_id: churchId, nome: $('m-nome').value, telefone: $('m-tel').value, tipo: $('m-tipo').value });
   e.target.reset();
   carregarMembros();
 });
 
 window.excluirMembro = async id => {
-  if (!confirm('Deseja excluir este registro?')) return;
+  if (!confirm('Excluir este registro?')) return;
   await sb.from('members').delete().eq('id', id);
   carregarMembros();
 };
 
-// --- GESTÃO DE CÉLULAS ---
 async function carregarCelulas() {
   const { data } = await sb.from('cells').select('*').eq('church_id', churchId);
   $('grid-celulas').innerHTML = (data || []).map(c => `
-    <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2">
+    <div class="bg-white p-4 rounded-xl shadow-sm border space-y-1">
       <h3 class="font-bold text-slate-800">${esc(c.nome)}</h3>
       <p class="text-xs text-slate-500">Líder: <b>${esc(c.lider || 'Não definido')}</b></p>
       <p class="text-xs text-slate-500">Encontro: <b>${esc(c.dia_reuniao || 'A definir')}</b></p>
@@ -212,37 +246,25 @@ async function carregarCelulas() {
 
 $('form-celula').addEventListener('submit', async e => {
   e.preventDefault();
-  await sb.from('cells').insert({
-    church_id: churchId,
-    nome: $('c-nome-cel').value,
-    lider: $('c-lider').value,
-    dia_reuniao: $('c-dia').value
-  });
+  await sb.from('cells').insert({ church_id: churchId, nome: $('c-nome-cel').value, lider: $('c-lider').value, dia_reuniao: $('c-dia').value });
   e.target.reset();
   carregarCelulas();
 });
 
-// --- AGENDA ---
 async function carregarAgenda() {
   const { data } = await sb.from('events').select('*').eq('church_id', churchId).order('data_inicio');
   $('lista-eventos').innerHTML = (data || []).map(ev => `
     <tr class="border-b hover:bg-slate-50/50">
       <td class="p-3 font-medium">${esc(ev.titulo)}</td>
-      <td class="p-3 text-slate-600 text-xs">${new Date(ev.data_inicio).toLocaleString('pt-BR')}</td>
-      <td class="p-3 text-right">
-        <button onclick="window.excluirEvento('${ev.id}')" class="text-red-600 hover:underline text-xs">Excluir</button>
-      </td>
+      <td class="p-3 text-slate-500 text-xs">${new Date(ev.data_inicio).toLocaleString('pt-BR')}</td>
+      <td class="p-3 text-right"><button onclick="window.excluirEvento('${ev.id}')" class="text-red-600 hover:underline text-xs">Excluir</button></td>
     </tr>
   `).join('');
 }
 
 $('form-evento').addEventListener('submit', async e => {
   e.preventDefault();
-  await sb.from('events').insert({
-    church_id: churchId,
-    titulo: $('e-titulo').value,
-    data_inicio: $('e-data').value
-  });
+  await sb.from('events').insert({ church_id: churchId, titulo: $('e-titulo').value, data_inicio: $('e-data').value });
   e.target.reset();
   carregarAgenda();
 });
@@ -252,9 +274,7 @@ window.excluirEvento = async id => {
   carregarAgenda();
 };
 
-function sair() {
-  location.href = 'index.html';
-}
+function sair() { location.href = 'index.html'; }
 
 init();
 </script>
