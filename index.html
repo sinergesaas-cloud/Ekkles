@@ -142,7 +142,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = function(id) { return document.getElementById(id); };
 const brl = function(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); };
-const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); });
+const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 
 function mostrarErro(texto) { $('msg').textContent = texto || ''; }
 
@@ -262,7 +262,7 @@ window.gerarMensagemAcesso = function(churchId, nomeIgreja, responsavel) {
   const baseUrl = window.location.origin;
   const linkPainel = baseUrl + '/igreja.html?igreja=' + churchId;
   const linkQrCode = baseUrl + '/visitante.html?igreja=' + churchId;
-  const mensagem = 'Shalom, ' + responsavel + '! ✝️\n\nSeu acesso ao sistema Ekkles OS da igreja ' + nomeIgreja + ' já está liberado e ativo!\n\n💻 Painel Administrativo da Igreja:\n' + linkPainel + \n\n📱 Link do QR Code para Visitantes (Culto):\n' + linkQrCode + \n\nQualquer dúvida, estamos à disposição. Deus abençoe! 🙏';
+  const mensagem = 'Shalom, ' + responsavel + '! ✝️\n\nSeu acesso ao sistema Ekkles OS da igreja ' + nomeIgreja + ' já está liberado e ativo!\n\n💻 Painel Administrativo da Igreja:\n' + linkPainel + '\n\n📱 Link do QR Code para Visitantes (Culto):\n' + linkQrCode + '\n\nQualquer dúvida, estamos à disposição. Deus abençoe! 🙏';
   $('texto-whatsapp').value = mensagem;
   $('modal-acesso').classList.remove('hidden');
 };
