@@ -107,13 +107,13 @@ const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const $ = id => document.getElementById(id);
-const brl = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = function(id) { return document.getElementById(id); };
+const brl = function(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); };
+const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 
 function mostrarErro(texto) { $('msg').textContent = texto || ''; }
 
-$('form-login').addEventListener('submit', async e => {
+$('form-login').addEventListener('submit', async function(e) {
   e.preventDefault();
   $('l-erro').textContent = '';
   const { error } = await sb.auth.signInWithPassword({ email: $('l-email').value, password: $('l-senha').value });
@@ -121,7 +121,7 @@ $('form-login').addEventListener('submit', async e => {
   mostrarApp();
 });
 
-$('btn-sair').addEventListener('click', async () => {
+$('btn-sair').addEventListener('click', async function() {
   await sb.auth.signOut();
   location.reload();
 });
@@ -136,7 +136,7 @@ async function mostrarApp() {
 async function carregarPlanos() {
   const { data, error } = await sb.from('plans').select('*').order('preco_mensal');
   if (error) { mostrarErro('Erro ao carregar planos: ' + error.message); return; }
-  $('f-plano').innerHTML = data.map(p => `<option value="${esc(p.id)}">${esc(p.nome)} (${brl(p.preco_mensal)}/mês)</option>`).join('');
+  $('f-plano').innerHTML = data.map(function(p) { return '<option value="' + esc(p.id) + '">' + esc(p.nome) + ' (' + brl(p.preco_mensal) + '/mês)</option>'; }).join('');
 }
 
 async function carregar() {
@@ -150,7 +150,7 @@ async function carregar() {
 
 function render(lista) {
   let ativas = 0, bloq = 0, receita = 0;
-  lista.forEach(s => {
+  lista.forEach(function(s) {
     if (s.status === 'ativa') { ativas++; receita += Number(s.plans?.preco_mensal || 0); }
     if (s.status === 'bloqueada') bloq++;
   });
@@ -158,22 +158,23 @@ function render(lista) {
   $('c-bloq').textContent = bloq;
   $('c-receita').textContent = brl(receita);
 
-  $('lista').innerHTML = lista.map(s => `
-    <tr class="border-b hover:bg-slate-50/50">
-      <td class="p-3 font-medium">${esc(s.churches?.nome)}</td>
-      <td class="p-3 text-slate-600">${esc(s.plans?.nome)}</td>
-      <td class="p-3 text-slate-600">${esc(s.vencimento)}</td>
-      <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase st-${esc(s.status)}">${esc(s.status)}</span></td>
-      <td class="p-3 text-right whitespace-nowrap space-x-2">
-        <button onclick="window.gerarMensagemAcesso('${s.church_id}', '${esc(s.churches?.nome)}', '${esc(s.churches?.responsavel || 'Pastor(a)}')')" class="text-emerald-700 hover:text-emerald-900 font-medium">Copiar Acesso</button>
-        <button onclick="window.alternar('${s.id}','${s.status}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Alternar</button>
-        <button onclick="window.renovar('${s.id}','${s.plan_id}','${s.vencimento}')" class="text-emerald-700 hover:text-emerald-900 font-medium">Renovar +30d</button>
-        <button onclick="window.excluir('${s.church_id}')" class="text-red-600 hover:text-red-800 font-medium">Excluir</button>
-      </td>
-    </tr>`).join('');
+  $('lista').innerHTML = lista.map(function(s) {
+    return '<tr class="border-b hover:bg-slate-50/50">' +
+      '<td class="p-3 font-medium">' + esc(s.churches?.nome) + '</td>' +
+      '<td class="p-3 text-slate-600">' + esc(s.plans?.nome) + '</td>' +
+      '<td class="p-3 text-slate-600">' + esc(s.vencimento) + '</td>' +
+      '<td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase st-' + esc(s.status) + '">' + esc(s.status) + '</span></td>' +
+      '<td class="p-3 text-right whitespace-nowrap space-x-2">' +
+        '<button onclick="window.gerarMensagemAcesso(\'' + s.church_id + '\', \'' + esc(s.churches?.nome) + '\', \'' + esc(s.churches?.responsavel || 'Pastor(a)') + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Copiar Acesso</button> ' +
+        '<button onclick="window.alternar(\'' + s.id + '\',\'' + s.status + '\')" class="text-indigo-600 hover:text-indigo-800 font-medium">Alternar</button> ' +
+        '<button onclick="window.renovar(\'' + s.id + '\',\'' + s.plan_id + '\',\'' + s.vencimento + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Renovar +30d</button> ' +
+        '<button onclick="window.excluir(\'' + s.church_id + '\')" class="text-red-600 hover:text-red-800 font-medium">Excluir</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
 }
 
-$('form-igreja').addEventListener('submit', async e => {
+$('form-igreja').addEventListener('submit', async function(e) {
   e.preventDefault();
   const nomeIgreja = $('f-nome').value;
   const respIgreja = $('f-resp').value || 'Pastor(a)';
@@ -195,10 +196,10 @@ $('form-igreja').addEventListener('submit', async e => {
 
 window.gerarMensagemAcesso = function(churchId, nomeIgreja, responsavel) {
   const baseUrl = window.location.origin;
-  const linkPainel = `${baseUrl}/igreja.html?igreja=${churchId}`;
-  const linkQrCode = `${baseUrl}/visitante.html?igreja=${churchId}`;
+  const linkPainel = baseUrl + '/igreja.html?igreja=' + churchId;
+  const linkQrCode = baseUrl + '/visitante.html?igreja=' + churchId;
 
-  const mensagem = `Shalom, ${responsavel}! ✝️\n\nSeu acesso ao sistema *Ekkles OS* da igreja *${nomeIgreja}* já está liberado e ativo!\n\n💻 *Painel Administrativo da Igreja:*\n${linkPainel}\n\n📱 *Link do QR Code para Visitantes (Culto):*\n${linkQrCode}\n\nQualquer dúvida ou suporte necessário, estamos à disposição. Deus abençoe! 🙏`;
+  const mensagem = 'Shalom, ' + responsavel + '! ✝️\n\nSeu acesso ao sistema Ekkles OS da igreja ' + nomeIgreja + ' já está liberado e ativo!\n\n💻 Painel Administrativo da Igreja:\n' + linkPainel + '\n\n📱 Link do QR Code para Visitantes (Culto):\n' + linkQrCode + '\n\nQualquer dúvida ou suporte necessário, estamos à disposição. Deus abençoe! 🙏';
 
   $('texto-whatsapp').value = mensagem;
   $('modal-acesso').classList.remove('hidden');
@@ -243,7 +244,7 @@ window.excluir = async function(churchId) {
   await carregar();
 };
 
-(async () => {
+(async function() {
   const { data } = await sb.auth.getSession();
   if (data.session) mostrarApp();
 })();
