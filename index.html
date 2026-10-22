@@ -79,6 +79,43 @@
   <p id="msg" class="text-sm text-red-600 mt-3 text-center font-medium"></p>
 </div>
 
+<!-- MODAL DE EDIÇÃO DE IGREJA -->
+<div id="modal-editar" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 border">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="font-bold text-lg text-indigo-700">Editar Dados da Igreja</h3>
+      <button onclick="fecharModalEdicao()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">&times;</button>
+    </div>
+    <form id="form-editar" class="space-y-3">
+      <input type="hidden" id="e-church-id">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Nome da Igreja</label>
+        <input id="e-nome" required class="w-full border rounded p-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Responsável / Pastor</label>
+        <input id="e-resp" class="w-full border rounded p-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">URL da Logo</label>
+        <input id="e-logo" class="w-full border rounded p-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Tema Padrão</label>
+        <select id="e-tema" class="w-full border rounded p-2 text-sm bg-white">
+          <option value="indigo">Tema: Indigo Moderno</option>
+          <option value="emerald">Tema: Esmeralda Viva</option>
+          <option value="amber">Tema: Dourado / Âmbar</option>
+          <option value="rose">Tema: Rosa / Vinho</option>
+          <option value="dark">Tema: Dark Elegance</option>
+        </select>
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded p-2.5 font-medium text-sm transition">Salvar Alterações</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL DE COMPARTILHAMENTO -->
 <div id="modal-acesso" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 border">
     <div class="flex justify-between items-center border-b pb-3">
@@ -105,7 +142,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = function(id) { return document.getElementById(id); };
 const brl = function(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); };
-const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); });
 
 function mostrarErro(texto) { $('msg').textContent = texto || ''; }
 
@@ -137,7 +174,7 @@ async function carregarPlanos() {
 
 async function carregar() {
   const { data, error } = await sb.from('subscriptions')
-    .select('id, status, vencimento, church_id, plan_id, churches(nome, responsavel), plans(nome, preco_mensal)')
+    .select('id, status, vencimento, church_id, plan_id, churches(id, nome, responsavel, logo_url, tema), plans(nome, preco_mensal)')
     .order('vencimento');
   if (error) { mostrarErro('Erro ao carregar assinaturas: ' + error.message); return; }
   mostrarErro('');
@@ -155,15 +192,17 @@ function render(lista) {
   $('c-receita').textContent = brl(receita);
 
   $('lista').innerHTML = lista.map(function(s) {
+    const ch = s.churches || {};
     return '<tr class="border-b hover:bg-slate-50/50">' +
-      '<td class="p-3 font-medium">' + esc(s.churches?.nome) + '</td>' +
+      '<td class="p-3 font-medium">' + esc(ch.nome) + '</td>' +
       '<td class="p-3 text-slate-600">' + esc(s.plans?.nome) + '</td>' +
       '<td class="p-3 text-slate-600">' + esc(s.vencimento) + '</td>' +
       '<td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase st-' + esc(s.status) + '">' + esc(s.status) + '</span></td>' +
       '<td class="p-3 text-right whitespace-nowrap space-x-2">' +
-        '<button onclick="window.gerarMensagemAcesso(\'' + s.church_id + '\', \'' + esc(s.churches?.nome) + '\', \'' + esc(s.churches?.responsavel || 'Pastor(a)') + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Copiar Acesso</button> ' +
+        '<button onclick="window.abrirEditar(\'' + ch.id + '\', \'' + esc(ch.nome) + '\', \'' + esc(ch.responsavel || '') + '\', \'' + esc(ch.logo_url || '') + '\', \'' + (ch.tema || 'indigo') + '\')" class="text-indigo-600 hover:text-indigo-900 font-medium">Editar</button> ' +
+        '<button onclick="window.gerarMensagemAcesso(\'' + s.church_id + '\', \'' + esc(ch.nome) + '\', \'' + esc(ch.responsavel || 'Pastor(a)') + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Copiar Acesso</button> ' +
         '<button onclick="window.alternar(\'' + s.id + '\',\'' + s.status + '\')" class="text-indigo-600 hover:text-indigo-800 font-medium">Alternar</button> ' +
-        '<button onclick="window.renovar(\'' + s.id + '\',\'' + s.plan_id + '\',\'' + s.vencimento + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Renovar +30d</button> ' +
+        '<button onclick="window.renovar(\'' + s.id + '\',\'' + s.plan_id + '\',\'' + s.vencimento + '\')" class="text-emerald-700 hover:text-emerald-900 font-medium">Renovar</button> ' +
         '<button onclick="window.excluir(\'' + s.church_id + '\')" class="text-red-600 hover:text-red-800 font-medium">Excluir</button>' +
       '</td>' +
     '</tr>';
@@ -191,11 +230,39 @@ $('form-igreja').addEventListener('submit', async function(e) {
   window.gerarMensagemAcesso(igreja.id, nomeIgreja, respIgreja);
 });
 
+window.abrirEditar = function(id, nome, resp, logo, tema) {
+  $('e-church-id').value = id;
+  $('e-nome').value = nome;
+  $('e-resp').value = resp;
+  $('e-logo').value = logo;
+  $('e-tema').value = tema;
+  $('modal-editar').classList.remove('hidden');
+};
+
+window.fecharModalEdicao = function() {
+  $('modal-editar').classList.add('hidden');
+};
+
+$('form-editar').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const id = $('e-church-id').value;
+  const { error } = await sb.from('churches').update({
+    nome: $('e-nome').value,
+    responsavel: $('e-resp').value,
+    logo_url: $('e-logo').value || null,
+    tema: $('e-tema').value
+  }).eq('id', id);
+
+  if (error) { alert('Erro ao atualizar: ' + error.message); return; }
+  fecharModalEdicao();
+  await carregar();
+});
+
 window.gerarMensagemAcesso = function(churchId, nomeIgreja, responsavel) {
   const baseUrl = window.location.origin;
   const linkPainel = baseUrl + '/igreja.html?igreja=' + churchId;
   const linkQrCode = baseUrl + '/visitante.html?igreja=' + churchId;
-  const mensagem = 'Shalom, ' + responsavel + '! ✝️\n\nSeu acesso ao sistema Ekkles OS da igreja ' + nomeIgreja + ' já está liberado e ativo!\n\n💻 Painel Administrativo da Igreja:\n' + linkPainel + '\n\n📱 Link do QR Code para Visitantes (Culto):\n' + linkQrCode + '\n\nQualquer dúvida ou suporte necessário, estamos à disposição. Deus abençoe! 🙏';
+  const mensagem = 'Shalom, ' + responsavel + '! ✝️\n\nSeu acesso ao sistema Ekkles OS da igreja ' + nomeIgreja + ' já está liberado e ativo!\n\n💻 Painel Administrativo da Igreja:\n' + linkPainel + \n\n📱 Link do QR Code para Visitantes (Culto):\n' + linkQrCode + \n\nQualquer dúvida, estamos à disposição. Deus abençoe! 🙏';
   $('texto-whatsapp').value = mensagem;
   $('modal-acesso').classList.remove('hidden');
 };
@@ -204,7 +271,7 @@ window.fecharModal = function() { $('modal-acesso').classList.add('hidden'); };
 window.copiarTexto = function() {
   $('texto-whatsapp').select();
   document.execCommand('copy');
-  alert('Mensagem copiada para a área de transferência!');
+  alert('Mensagem copiada!');
 };
 
 window.alternar = async function(id, statusAtual) {
