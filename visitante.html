@@ -13,7 +13,7 @@
   <div class="text-center mb-6">
     <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Seja Bem-Vindo!</span>
     <h1 id="txt-titulo" class="text-2xl font-bold mt-3 text-white">Que alegria ter você aqui</h1>
-    <p class="text-sm text-slate-400 mt-1">Deixe seus dados para registrar sua presença e falar com nossa assistente.</p>
+    <p class="text-sm text-slate-400 mt-1">Preencha seus dados para registrar sua presença e falar com nossa assistente no WhatsApp.</p>
   </div>
 
   <form id="form-visitante" class="space-y-4">
@@ -28,7 +28,7 @@
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-slate-700 mb-1">Como nos conheceu? (Opcional)</label>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Como nos conheceu? (Opcional)</label>
       <select id="v-como" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none">
         <option value="">Selecione uma opção...</option>
         <option value="amigo">Convidado por amigo/familiar</option>
@@ -38,15 +38,15 @@
       </select>
     </div>
 
-    <button type="submit" id="btn-enviar" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm">
-      Cadastrar minha presença
+    <button type="submit" id="btn-enviar" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3.5 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2">
+      <span>💬 Confirmar cadastro no WhatsApp</span>
     </button>
   </form>
 
   <div id="sucesso" class="hidden text-center py-6 space-y-4">
     <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
-    <h2 class="text-xl font-bold text-white">Presença Registrada!</h2>
-    <p class="text-sm text-slate-300">Estamos te redirecionando para o WhatsApp da igreja para iniciar o atendimento com nossa assistente...</p>
+    <h2 class="text-xl font-bold text-white">Cadastro Realizado!</h2>
+    <p class="text-sm text-slate-300">Abrindo o WhatsApp para você falar com nossa assistente...</p>
     
     <a id="link-whats-direto" href="#" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm text-center">
       💬 Abrir WhatsApp Agora
@@ -58,8 +58,8 @@
 
 <script>
 const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iisComposite...'; // Mantida a sua chave original abaixo
+const sb = supabase.realtime ? null : supabase.createClient('https://txtuitlxljyzfbzlpsou.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM');
 
 const $ = id => document.getElementById(id);
 const urlParams = new URLSearchParams(window.location.search);
@@ -67,7 +67,6 @@ const churchId = urlParams.get('igreja');
 
 let dadosIgreja = null;
 
-// Ao carregar a página, busca o nome da igreja e o número do WhatsApp configurado no painel
 async function initVisitante() {
   if (!churchId) {
     $('msg-erro').textContent = 'Link de acesso inválido. Falha na identificação da igreja.';
@@ -94,7 +93,7 @@ $('form-visitante').addEventListener('submit', async e => {
 
   const btn = $('btn-enviar');
   btn.disabled = true;
-  btn.textContent = 'Salvando e conectando...';
+  btn.textContent = 'Salvando e abrindo WhatsApp...';
 
   const nome = $('v-nome').value.trim();
   const telefone = $('v-tel').value.trim();
@@ -112,12 +111,11 @@ $('form-visitante').addEventListener('submit', async e => {
   if (error) {
     $('msg-erro').textContent = 'Erro ao salvar: ' + error.message;
     btn.disabled = false;
-    btn.textContent = 'Cadastrar minha presença';
+    btn.innerHTML = '<span>💬 Confirmar cadastro no WhatsApp</span>';
     return;
   }
 
   // 2. Preparar link seguro do WhatsApp (Inbound)
-  // Se a igreja cadastrou o número dela, usamos. Senão, usamos um número padrão de exemplo ou alerta.
   let foneIgreja = dadosIgreja && dadosIgreja.whatsapp_numero ? dadosIgreja.whatsapp_numero.replace(/\D/g, '') : '5511999999999';
   const nomeAssistente = dadosIgreja && dadosIgreja.assistente_nome ? dadosIgreja.assistente_nome : 'Débora';
   const nomeIgreja = dadosIgreja ? dadosIgreja.nome : 'nossa igreja';
@@ -125,17 +123,16 @@ $('form-visitante').addEventListener('submit', async e => {
   const textoMensagem = `Olá, ${nomeAssistente}! Me chamo ${nome}. Fui ao culto da ${nomeIgreja} hoje e fiz meu check-in pelo QR Code. Gostaria de saber mais sobre a igreja e as células! 🙏`;
   const urlWhatsApp = `https://wa.me/${foneIgreja}?text=` + encodeURIComponent(textoMensagem);
 
-  // Configurar o botão de redirecionamento direto
   $('link-whats-direto').href = urlWhatsApp;
 
-  // 3. Esconde o formulário e exibe a tela de sucesso
+  // 3. Exibe tela de sucesso e redireciona imediatamente
   $('form-visitante').classList.add('hidden');
   $('sucesso').classList.remove('hidden');
 
-  // Redireciona automaticamente após 2 segundos para o WhatsApp
+  // Redireciona quase instantaneamente (em meio segundo) para o WhatsApp
   setTimeout(() => {
     window.location.href = urlWhatsApp;
-  }, 2000);
+  }, 500);
 });
 </script>
 </body>
