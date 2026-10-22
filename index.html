@@ -15,7 +15,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
 
-<!-- TELA DE LOGIN -->
 <div id="login" class="min-h-screen flex items-center justify-center p-4">
   <form id="form-login" class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm space-y-4">
     <div>
@@ -29,7 +28,6 @@
   </form>
 </div>
 
-<!-- PAINEL ADMINISTRATIVO -->
 <div id="app" class="hidden max-w-6xl mx-auto p-4 md:p-6">
   <header class="flex flex-wrap justify-between items-center gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm border">
     <div>
@@ -38,14 +36,12 @@
     <button id="btn-sair" class="text-sm text-slate-500 hover:text-red-600 transition font-medium">Sair do Sistema</button>
   </header>
 
-  <!-- MÉTRICAS -->
   <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Igrejas ativas</p><p id="c-ativas" class="text-2xl font-bold text-emerald-600">0</p></div>
     <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Bloqueadas / Inadimplentes</p><p id="c-bloq" class="text-2xl font-bold text-red-600">0</p></div>
     <div class="bg-white p-4 rounded-lg shadow-sm border"><p class="text-sm text-slate-500">Receita mensal estimada</p><p id="c-receita" class="text-2xl font-bold text-slate-800">R$ 0,00</p></div>
   </section>
 
-  <!-- FORMULÁRIO DE CADASTRO -->
   <form id="form-igreja" class="bg-white p-4 rounded-lg shadow-sm border mb-6 grid grid-cols-1 md:grid-cols-6 gap-3">
     <div class="md:col-span-6 pb-2 border-b">
       <h2 class="font-semibold text-sm text-slate-700">Cadastrar Nova Igreja / Assinatura</h2>
@@ -66,7 +62,6 @@
     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded p-2 font-medium text-sm md:col-span-6 transition">Cadastrar e Gerar Acesso</button>
   </form>
 
-  <!-- TABELA DE CLIENTES -->
   <div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
     <table class="w-full text-left text-sm min-w-[640px]">
       <thead class="bg-slate-100 border-b text-slate-600">
@@ -84,7 +79,6 @@
   <p id="msg" class="text-sm text-red-600 mt-3 text-center font-medium"></p>
 </div>
 
-<!-- MODAL DE COMPARTILHAMENTO -->
 <div id="modal-acesso" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 border">
     <div class="flex justify-between items-center border-b pb-3">
@@ -111,7 +105,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = function(id) { return document.getElementById(id); };
 const brl = function(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); };
-const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); });
+const esc = function(s) { return String(s ?? '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 
 function mostrarErro(texto) { $('msg').textContent = texto || ''; }
 
