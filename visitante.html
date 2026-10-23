@@ -13,7 +13,7 @@
   <div class="text-center mb-6">
     <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Seja Bem-Vindo!</span>
     <h1 id="txt-titulo" class="text-2xl font-bold mt-3 text-white">Que alegria ter você aqui</h1>
-    <p class="text-sm text-slate-400 mt-1">Preencha seus dados para registrar sua presença e falar com nossa assistente no WhatsApp.</p>
+    <p class="text-sm text-slate-400 mt-1">Preencha seus dados para registrar sua presença e falar com nossa assistente.</p>
   </div>
 
   <form id="form-visitante" class="space-y-4">
@@ -39,17 +39,17 @@
     </div>
 
     <button type="submit" id="btn-enviar" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3.5 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2">
-      <span>💬 Confirmar cadastro no WhatsApp</span>
+      <span>💬 Confirmar e Iniciar Atendimento</span>
     </button>
   </form>
 
   <div id="sucesso" class="hidden text-center py-6 space-y-4">
     <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
     <h2 class="text-xl font-bold text-white">Cadastro Realizado!</h2>
-    <p class="text-sm text-slate-300">Abrindo o WhatsApp para você falar com nossa assistente...</p>
+    <p class="text-sm text-slate-300">Conectando você com nossa assistente...</p>
     
-    <a id="link-whats-direto" href="#" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm text-center">
-      💬 Abrir WhatsApp Agora
+    <a id="link-typebot-direto" href="#" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm text-center">
+      💬 Abrir Assistente Agora
     </a>
   </div>
 
@@ -58,8 +58,8 @@
 
 <script>
 const SUPABASE_URL = 'https://txtuitlxljyzfbzlpsou.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iisComposite...'; // Mantida a sua chave original abaixo
-const sb = supabase.realtime ? null : supabase.createClient('https://txtuitlxljyzfbzlpsou.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM');
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4dHVpdGx4bGp5emZiemxwc291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTgwODUsImV4cCI6MjEwODI3NDA4NX0.M7UpeRXDpN37SCLczeS2WNTgG1vm9szlSSMtBc253XM';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = id => document.getElementById(id);
 const urlParams = new URLSearchParams(window.location.search);
@@ -93,7 +93,7 @@ $('form-visitante').addEventListener('submit', async e => {
 
   const btn = $('btn-enviar');
   btn.disabled = true;
-  btn.textContent = 'Salvando e abrindo WhatsApp...';
+  btn.textContent = 'Salvando e conectando...';
 
   const nome = $('v-nome').value.trim();
   const telefone = $('v-tel').value.trim();
@@ -111,27 +111,26 @@ $('form-visitante').addEventListener('submit', async e => {
   if (error) {
     $('msg-erro').textContent = 'Erro ao salvar: ' + error.message;
     btn.disabled = false;
-    btn.innerHTML = '<span>💬 Confirmar cadastro no WhatsApp</span>';
+    btn.innerHTML = '<span>💬 Confirmar e Iniciar Atendimento</span>';
     return;
   }
 
-  // 2. Preparar link seguro do WhatsApp (Inbound)
-  let foneIgreja = dadosIgreja && dadosIgreja.whatsapp_numero ? dadosIgreja.whatsapp_numero.replace(/\D/g, '') : '5511999999999';
-  const nomeAssistente = dadosIgreja && dadosIgreja.assistente_nome ? dadosIgreja.assistente_nome : 'Débora';
-  const nomeIgreja = dadosIgreja ? dadosIgreja.nome : 'nossa igreja';
+  // 2. Link do seu Typebot publicado
+  // Substitua a URL abaixo pelo link público real do seu bot gerado no Typebot (ex: https://typebot.io/seu-bot-aqui)
+  const URL_DO_TYPEBOT = 'https://typebot.co/ekkles-os-assistente-mt2qgb3'; 
 
-  const textoMensagem = `Olá, ${nomeAssistente}! Me chamo ${nome}. Fui ao culto da ${nomeIgreja} hoje e fiz meu check-in pelo QR Code. Gostaria de finalizar meu cadastro! 🙏`;
-  const urlWhatsApp = `https://wa.me/${foneIgreja}?text=` + encodeURIComponent(textoMensagem);
+  // Passamos o nome e o telefone direto na URL para o Typebot já capturar automaticamente
+  const urlFinalTypebot = `${URL_DO_TYPEBOT}?nome=${encodeURIComponent(nome)}&telefone=${encodeURIComponent(telefone)}&church_id=${churchId}`;
 
-  $('link-whats-direto').href = urlWhatsApp;
+  $('link-typebot-direto').href = urlFinalTypebot;
 
   // 3. Exibe tela de sucesso e redireciona imediatamente
   $('form-visitante').classList.add('hidden');
   $('sucesso').classList.remove('hidden');
 
-  // Redireciona quase instantaneamente (em meio segundo) para o WhatsApp
+  // Redireciona em meio segundo para o Typebot
   setTimeout(() => {
-    window.location.href = urlWhatsApp;
+    window.location.href = urlFinalTypebot;
   }, 500);
 });
 </script>
